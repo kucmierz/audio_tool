@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from core.cue import parse_cue_file, parse_cue_text
@@ -110,6 +112,24 @@ def test_reads_cp1250_file(tmp_path):
     path.write_bytes(content.encode("cp1250"))
     sheet = parse_cue_file(path)
     assert sheet.album_title == "Zażółć gęślą jaźń"
+
+
+def test_real_audioteka_file():
+    # Real cue from audioteka.pl (DRM token scrubbed): CRLF, tabs, ASCII.
+    path = Path(__file__).parent / "fixtures" / "zbrojni.cue"
+    sheet = parse_cue_file(path)
+    assert sheet.album_title == "Zbrojni"
+    assert sheet.album_performer == "Terry Pratchett"
+    assert sheet.source_file == "zbrojni.mp3"
+    assert len(sheet.chapters) == 22
+    assert sheet.chapters[0].start_ms == 0
+    assert sheet.chapters[1].start_ms == 1731696  # from REM, not INDEX
+    assert sheet.chapters[-1].title == "Sciezka 22"
+    assert sheet.chapters[-1].start_ms == 36698256
+    assert sheet.chapters[-1].end_ms is None
+    # All chapters are sane: 1 second .. 2 hours each.
+    for c in sheet.chapters[:-1]:
+        assert 1_000 < c.duration_ms < 7_200_000
 
 
 def test_reads_utf8_with_bom(tmp_path):
