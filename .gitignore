@@ -12,6 +12,9 @@ dist/
 # Bundled ffmpeg binaries (drop them in manually before build)
 vendor/ffmpeg/*
 !vendor/ffmpeg/.gitkeep
+tests/
+out/
+
 
 # IDE
 .idea/
